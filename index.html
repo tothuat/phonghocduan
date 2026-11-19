@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phòng họp dự án – Gsheet Tô Thuật</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#188038;--g2:#137333;--gl:#e6f4ea;--ink:#1f2a24;--mute:#5f6b64;--line:#dfe6e1;--bg:#f4f7f5;--dark:#0f1412;--dark2:#1a211d;--dark3:#222b25;--red:#d93025}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--bg);display:flex;flex-direction:column}
+[hidden]{display:none!important}
+button{font:inherit;cursor:pointer;border:0}
+button:disabled{cursor:not-allowed;opacity:.45}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 20px;background:#fff;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand svg{width:36px;height:36px;flex:none}
+.brand b{display:block;font-size:17px;font-weight:800;letter-spacing:-.2px}
+.brand span{display:block;font-size:12px;color:var(--mute)}
+.chip{font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--gl);color:var(--g2)}
+main{flex:1;display:flex;min-height:0}
+.view{flex:1;display:flex;min-height:0}
+.center{align-items:center;justify-content:center;padding:28px 16px;overflow:auto}
+.card{width:100%;max-width:520px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 10px 30px rgba(24,128,56,.08)}
+.card h1{margin:0 0 6px;font-size:22px;font-weight:800;letter-spacing:-.3px}
+.card p.sub{margin:0 0 18px;color:var(--mute);font-size:14px;line-height:1.55}
+.pre{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#101512;margin-bottom:14px}
+.pre video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.pre .off{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#cfd8d3;font-size:14px}
+.pre.camoff video{visibility:hidden}
+.pre.camoff .off{display:flex}
+.pre .tg{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:10px}
+.rb{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.18);color:#fff;backdrop-filter:blur(4px)}
+.rb svg{width:22px;height:22px;fill:currentColor}
+.rb.off{background:var(--red)}
+label{display:block;font-size:13px;font-weight:600;margin:4px 0 6px}
+input{width:100%;font:inherit;font-size:15px;padding:12px 13px;border:1px solid var(--line);border-radius:10px;background:#fbfcfb;color:var(--ink);outline:none}
+input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(24,128,56,.15);background:#fff}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border-radius:10px;font-weight:600;font-size:15px;background:var(--g);color:#fff;transition:background .15s}
+.btn:hover{background:var(--g2)}
+.btn.block{width:100%;margin-top:16px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:6px 10px;font-size:12px;border-radius:8px}
+.err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+.waitbox{display:flex;align-items:center;gap:14px;padding:16px;border-radius:14px;background:var(--gl);margin-bottom:14px}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid #b7dcc2;border-top-color:var(--g);animation:sp 1s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.waitbox b{display:block}
+.waitbox span{font-size:13px;color:var(--mute)}
+.call{background:var(--dark);color:#e8eeea}
+.mainc{flex:1;display:flex;flex-direction:column;min-width:0}
+#stage{flex:1;display:flex;gap:10px;padding:10px;min-height:0;position:relative}
+#screenBox{flex:1;position:relative;border-radius:12px;overflow:hidden;background:#000;display:none;min-width:0}
+#screenBox video{width:100%;height:100%;object-fit:contain}
+#screenBox .tag{top:10px;bottom:auto}
+#grid{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));align-content:center;gap:10px;min-width:0;overflow:auto}
+.sharing #screenBox{display:block}
+.sharing #grid{flex:none;width:220px;grid-template-columns:1fr;align-content:start}
+.sharing.nocams #grid{display:none}
+.nocams:not(.sharing) #t-me{display:none}
+.tile{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--dark3);border:2px solid transparent}
+.tile video{width:100%;height:100%;object-fit:cover}
+.tile.me video{transform:scaleX(-1)}
+.tile .avatar{position:absolute;inset:0;display:none;align-items:center;justify-content:center}
+.tile .avatar span{width:72px;height:72px;border-radius:50%;background:var(--g);color:#fff;display:grid;place-items:center;font-size:26px;font-weight:700}
+.sharing .tile .avatar span{width:40px;height:40px;font-size:15px}
+.tile.camoff video{visibility:hidden}
+.tile.camoff .avatar{display:flex}
+.tag{position:absolute;left:8px;bottom:8px;display:flex;align-items:center;gap:5px;font-size:12px;padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.6);max-width:calc(100% - 16px)}
+.tag b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag svg{width:14px;height:14px;fill:#ff8a80;flex:none;display:none}
+.tile.micoff .tag svg{display:block}
+.tile .conn{position:absolute;top:8px;right:8px;font-size:11px;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,.6);color:#ffd36b}
+#selfShare{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:5;font-size:13px;padding:6px 14px;border-radius:999px;background:var(--red);color:#fff}
+#unmute{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6}
+.bar{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;padding:10px;background:var(--dark2);border-top:1px solid #26302a}
+.cb{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:70px;padding:8px 10px;border-radius:12px;background:#2b3530;color:#e8eeea;font-size:12px;font-weight:500}
+.cb:hover:not(:disabled){background:#38443d}
+.cb svg{width:22px;height:22px;fill:currentColor}
+.cb.off{background:var(--red)}
+.cb.on{background:var(--g)}
+.cb.end{background:var(--red)}
+.badge{position:absolute;top:2px;right:8px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#fbbc04;color:#202124;font-size:11px;font-weight:700;display:grid;place-items:center}
+.side{width:330px;flex:none;background:var(--dark2);border-left:1px solid #26302a;display:flex;flex-direction:column;min-height:0;overflow:auto}
+.sec{padding:14px;border-bottom:1px solid #26302a}
+.sec h3{margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px}
+.sec h3 .cnt{padding:1px 8px;border-radius:999px;background:#2b3a31;font-size:12px;font-weight:600}
+.pi{display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:10px;background:var(--dark3);border:1px solid #2c3830;margin-bottom:8px;font-size:13px}
+.pi.new{border-color:#fbbc04}
+.pi .h{display:flex;align-items:center;gap:8px}
+.pi .h b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.pi .h span{color:#93a39a;font-size:12px}
+.pi .a{display:flex;gap:6px;flex-wrap:wrap}
+.pi .a .btn{flex:1;min-width:64px}
+.pi .a .ghost{background:transparent;color:#cfd8d3;border:1px solid #3a473f}
+.pi .a .ghost:hover{background:#2b3a31}
+.pi .a .warn{background:transparent;color:#ff8a80;border:1px solid #5c2b28}
+.empty{color:#93a39a;font-size:13px;line-height:1.6}
+.link{display:flex;gap:6px;margin-top:6px}
+.link input{font-size:12px;padding:8px;background:#141a16;border-color:#2c3830;color:#cfd8d3}
+#toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#202124;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:90%;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+footer{text-align:center;font-size:12px;color:var(--mute);padding:10px}
+footer a{color:var(--g2);text-decoration:none;font-weight:600}
+body.incall footer{display:none}
+@media (max-width:860px){
+.call{flex-direction:column}
+.side{width:100%;max-height:38vh;border-left:0;border-top:1px solid #26302a;order:2}
+#stage{flex-direction:column}
+.sharing #grid{width:auto;height:96px;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:150px}
+#grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.cb{min-width:52px;padding:8px}
+.cb span{display:none}
+.top{padding:8px 12px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://gsheet.vn" target="_blank" rel="noopener">
+    <svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#188038"/><rect x="9" y="8" width="18" height="20" rx="2.5" fill="#fff"/><path d="M9 15h18M9 21h18M16 8v20" stroke="#188038" stroke-width="2"/></svg>
+    <div><b>Gsheet Tô Thuật</b><span>Phòng họp dự án</span></div>
+  </a>
+  <span class="chip" id="roleChip" hidden>Giáo viên</span>
+</header>
+
+<main>
+  <section class="view center" id="vJoin" hidden>
+    <div class="card">
+      <h1 id="joinTitle">Tham gia phòng họp dự án</h1>
+      <p class="sub" id="joinSub">Nhập họ tên và gửi yêu cầu. Giáo viên sẽ duyệt cho bạn vào phòng.</p>
+      <div class="pre camoff" id="pre">
+        <video id="preVideo" autoplay playsinline muted></video>
+        <div class="off" id="preOff">Camera đang tắt</div>
+        <div class="tg">
+          <button class="rb" id="pMic" type="button" title="Mic"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg></button>
+          <button class="rb" id="pCam" type="button" title="Camera"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg></button>
+        </div>
+      </div>
+      <div id="nameBox">
+        <label for="fName">Họ và tên</label>
+        <input id="fName" maxlength="60" autocomplete="name" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="err" id="joinErr"></div>
+      <button class="btn block" id="joinBtn" type="button">Xin vào phòng</button>
+    </div>
+  </section>
+
+  <section class="view center" id="vWait" hidden>
+    <div class="card">
+      <h1>Đang chờ giáo viên duyệt</h1>
+      <p class="sub">Giữ trang này mở. Khi được duyệt, bạn sẽ vào phòng họp ngay.</p>
+      <div class="waitbox"><div class="spin"></div><div><b id="wName"></b><span id="wState">Đang gửi yêu cầu...</span></div></div>
+      <div class="pre camoff" id="pre2"><video id="preVideo2" autoplay playsinline muted></video><div class="off">Camera đang tắt</div></div>
+      <button class="btn ghost block" id="wCancel" type="button">Huỷ yêu cầu</button>
+    </div>
+  </section>
+
+  <section class="view center" id="vEnd" hidden>
+    <div class="card" style="text-align:center">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="#188038"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      <h1 id="endTitle" style="margin-top:10px"></h1>
+      <p class="sub" id="endText"></p>
+      <button class="btn" id="endAgain" type="button">Xin vào lại</button>
+    </div>
+  </section>
+
+  <section class="view call" id="vCall" hidden>
+    <div class="mainc">
+      <div id="stage">
+        <div id="screenBox"><video id="screenVideo" autoplay playsinline muted></video><span class="tag"><b id="screenName"></b></span></div>
+        <div id="grid"></div>
+        <div id="selfShare" hidden>Bạn đang chia sẻ màn hình</div>
+        <button class="btn" id="unmute" hidden>Bấm để bật âm thanh</button>
+      </div>
+      <div class="bar">
+        <button class="cb" id="bMic" type="button"><svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z"/></svg><span>Mic</span></button>
+        <button class="cb" id="bCam" type="button"><svg viewBox="0 0 24 24"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg><span>Camera</span></button>
+        <button class="cb" id="bScreen" type="button"><svg viewBox="0 0 24 24"><path d="M20 18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2H0v2h24v-2h-4zM4 6h16v10H4V6zm8 1-4 4h3v4h2v-4h3l-4-4z"/></svg><span>Chia sẻ màn hình</span></button>
+        <button class="cb" id="bTiles" type="button"><svg viewBox="0 0 24 24"><path d="M19 7h-8v6h8V7zm2-4H3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H3V5h18v14z"/></svg><span>Ẩn ô camera</span></button>
+        <button class="cb" id="bFull" type="button"><svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg><span>Toàn màn hình</span></button>
+        <button class="cb" id="bPeople" type="button" hidden><svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.97.05A4.2 4.2 0 0 1 17 16.5V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg><span>Người tham gia</span><i class="badge" id="waitBadge" hidden>0</i></button>
+        <button class="cb end" id="bEnd" type="button"><svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.96.96 0 0 1 0-1.36C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.72c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.3 11.3 0 0 0-2.67-1.85 1 1 0 0 1-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg><span id="bEndText">Rời phòng</span></button>
+      </div>
+    </div>
+    <aside class="side" id="side" hidden>
+      <div class="sec">
+        <h3>Phòng chờ <span class="cnt" id="wCount">0</span></h3>
+        <div id="waitList"><div class="empty">Chưa có ai xin vào.</div></div>
+        <div class="link"><input id="roomLink" readonly><button class="btn sm" id="copyLink" type="button">Sao chép</button></div>
+      </div>
+      <div class="sec">
+        <h3>Trong phòng <span class="cnt" id="mCount">0/4</span></h3>
+        <div id="memList"><div class="empty">Chưa có ai trong phòng.</div></div>
+      </div>
+    </aside>
+  </section>
+</main>
+<footer>© Gsheet Tô Thuật · <a href="https://gsheet.vn" target="_blank" rel="noopener">gsheet.vn</a> · <a href="https://tothuat.com" target="_blank" rel="noopener">tothuat.com</a></footer>
+<div id="toast" hidden></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxzsF0dSQnt1Dy3SY9KVwvxInbqU5w2QssahYYtn__IK9G1kOwPMjymlhgzlQO0ueNUcw/exec';
+const ICE = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+const MAX_GUESTS = 4;
+const $ = id => document.getElementById(id);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set: (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+};
+const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const initials = n => n === 'Giáo viên' ? 'GV' : (String(n || '?').trim().split(/\s+/).pop() || '?').charAt(0).toUpperCase();
+const rid = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join('');
+const post = (t, o) => fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(Object.assign({ t: t }, o || {})) }).then(r => r.json());
+const MIC_OFF = '<svg viewBox="0 0 24 24"><path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5a3 3 0 0 0-6 0v.18l5.98 5.99zM4.27 3 3 4.27l6.01 6.01V11a3 3 0 0 0 3 3c.22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/></svg>';
+
+const qs = new URLSearchParams(location.search);
+if (qs.get('h')) { store.set('hk', qs.get('h')); history.replaceState(null, '', location.pathname); }
+const SESSION = rid(10);
+let hk = store.get('hk');
+let me = JSON.parse(store.get('pd_me') || 'null');
+let role = 'guest', myId = null, running = false, inRoom = false, phase = '';
+let stream = null, camTrack = null, micTrack = null, screenTrack = null;
+let peers = {}, members = [], sharer = null, knownWait = new Set(), titleTimer = null;
+let wantCam = store.get('pd_cam') !== '0', wantMic = store.get('pd_mic') !== '0';
+
+function show(v) {
+  ['vJoin', 'vWait', 'vEnd', 'vCall'].forEach(x => $(x).hidden = x !== v);
+  document.body.classList.toggle('incall', v === 'vCall');
+}
+function toast(t) {
+  const el = $('toast');
+  el.textContent = t;
+  el.hidden = false;
+  clearTimeout(toast.t);
+  toast.t = setTimeout(() => el.hidden = true, 4000);
+}
+function auth(o) { return Object.assign(role === 'host' ? { h: hk } : { id: me.id, tk: me.tk }, o || {}); }
+const amOfferer = id => myId < id;
+
+let mediaP = null;
+function ensureMedia() {
+  if (!mediaP) mediaP = (async () => {
+    try { stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 360 }, audio: true }); }
+    catch (e) {
+      try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch (e2) { stream = new MediaStream(); }
+    }
+    camTrack = stream.getVideoTracks()[0] || null;
+    micTrack = stream.getAudioTracks()[0] || null;
+    if (camTrack) camTrack.enabled = wantCam;
+    if (micTrack) micTrack.enabled = wantMic;
+    const v = camTrack ? new MediaStream([camTrack]) : null;
+    $('preVideo').srcObject = v;
+    $('preVideo2').srcObject = v;
+    renderPre();
+    return stream;
+  })();
+  return mediaP;
+}
+
+function renderPre() {
+  const camOn = !!camTrack && camTrack.enabled, micOn = !!micTrack && micTrack.enabled;
+  ['pre', 'pre2'].forEach(id => $(id).classList.toggle('camoff', !camOn));
+  $('preOff').textContent = !camTrack ? 'Chưa có quyền dùng camera' : 'Camera đang tắt';
+  $('pCam').classList.toggle('off', !camOn);
+  $('pMic').classList.toggle('off', !micOn);
+}
+$('pCam').onclick = () => { if (!camTrack) return toast('Trình duyệt chưa cho phép dùng camera.'); camTrack.enabled = !camTrack.enabled; store.set('pd_cam', camTrack.enabled ? '1' : '0'); renderPre(); };
+$('pMic').onclick = () => { if (!micTrack) return toast('Trình duyệt chưa cho phép dùng micro.'); micTrack.enabled = !micTrack.enabled; store.set('pd_mic', micTrack.enabled ? '1' : '0'); renderPre(); };
+
+function iceDone(pc) {
+  return new Promise(res => {
+    if (pc.iceGatheringState === 'complete') return res();
+    const t = setTimeout(res, 4000);
+    pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } });
+  });
+}
+
+function myState() { return { cam: !!camTrack && camTrack.enabled, mic: !!micTrack && micTrack.enabled, scr: !!screenTrack }; }
+function sendTo(p, o) { if (p.dc && p.dc.readyState === 'open') p.dc.send(JSON.stringify(o)); }
+function broadcast() { Object.values(peers).forEach(p => sendTo(p, { st: myState() })); renderSelf(); }
+
+function makeTile(id, name, self) {
+  const el = document.createElement('div');
+  el.className = 'tile camoff' + (self ? ' me' : '');
+  el.id = 't-' + id;
+  el.innerHTML = '<video autoplay playsinline muted></video><div class="avatar"><span>' + esc(initials(name)) + '</span></div><span class="tag">' + MIC_OFF + '<b>' + esc(self ? name + ' (Bạn)' : name) + '</b></span>' + (self ? '' : '<span class="conn">Đang kết nối...</span>');
+  $('grid').appendChild(el);
+  return el;
+}
+
+function renderSelf() {
+  let t = $('t-me');
+  if (!t) t = makeTile('me', role === 'host' ? 'Giáo viên' : me.n, true);
+  const s = myState();
+  t.classList.toggle('camoff', !s.cam);
+  t.classList.toggle('micoff', !s.mic);
+  const v = t.querySelector('video');
+  if (camTrack && v.srcObject == null) v.srcObject = new MediaStream([camTrack]);
+  updateButtons();
+}
+
+function renderTile(p) {
+  const ok = p.pc && p.pc.connectionState === 'connected';
+  p.tile.classList.toggle('camoff', !ok || !p.rs.cam);
+  p.tile.classList.toggle('micoff', !p.rs.mic);
+  p.tile.querySelector('.conn').hidden = ok;
+}
+
+function closePeer(id) {
+  const p = peers[id];
+  if (!p) return;
+  delete peers[id];
+  try { p.pc.close(); } catch (e) {}
+  p.audio.srcObject = null;
+  p.tile.remove();
+  renderShare();
+}
+
+function newPeer(m) {
+  closePeer(m.id);
+  const p = { id: m.id, n: m.n, s: m.s, seq: 0, at: Date.now(), rs: { cam: false, mic: true, scr: false }, scr: null };
+  p.pc = new RTCPeerConnection({ iceServers: ICE });
+  p.audio = new Audio();
+  p.audio.autoplay = true;
+  p.tile = makeTile(m.id, m.n, false);
+  p.pc.ontrack = e => {
+    const i = p.pc.getTransceivers().indexOf(e.transceiver);
+    const ms = new MediaStream([e.track]);
+    if (i === 0) { p.audio.srcObject = ms; p.audio.play().catch(() => $('unmute').hidden = false); }
+    else if (i === 1) p.tile.querySelector('video').srcObject = ms;
+    else if (i === 2) { p.scr = ms; renderShare(); }
+  };
+  p.pc.ondatachannel = e => bindDc(p, e.channel);
+  p.pc.onconnectionstatechange = () => {
+    if (peers[p.id] !== p) return;
+    renderTile(p);
+    if (p.pc.connectionState === 'failed' && amOfferer(p.id)) doOffer(m).catch(() => {});
+  };
+  peers[m.id] = p;
+  return p;
+}
+
+function bindDc(p, ch) {
+  p.dc = ch;
+  ch.onopen = () => sendTo(p, { st: myState() });
+  ch.onmessage = e => {
+    let x;
+    try { x = JSON.parse(e.data); } catch (err) { return; }
+    if (x.st) { p.rs = x.st; renderTile(p); renderShare(); }
+    if (x.cmd && p.id === 'host') onCmd(x.cmd);
+  };
+}
+
+function localTracks() { return [micTrack, camTrack, screenTrack]; }
+
+async function doOffer(m) {
+  const p = newPeer(m);
+  p.seq = Date.now();
+  const tr = localTracks();
+  ['audio', 'video', 'video'].forEach((k, i) => p.pc.addTransceiver(tr[i] || k, { direction: 'sendrecv' }));
+  bindDc(p, p.pc.createDataChannel('ctl'));
+  await p.pc.setLocalDescription(await p.pc.createOffer());
+  await iceDone(p.pc);
+  if (peers[m.id] !== p) return;
+  await post('send', auth({ to: m.id, m: JSON.stringify({ k: 'o', q: p.seq, s: SESSION, d: p.pc.localDescription }) }));
+}
+
+async function onOffer(f, x) {
+  const m = members.find(y => y.id === f);
+  if (!m) return;
+  const p = newPeer({ id: f, n: m.n, s: x.s });
+  p.seq = x.q;
+  await p.pc.setRemoteDescription(x.d);
+  const tr = localTracks();
+  await Promise.all(p.pc.getTransceivers().slice(0, 3).map((t, i) => { t.direction = 'sendrecv'; return tr[i] ? t.sender.replaceTrack(tr[i]) : null; }));
+  await p.pc.setLocalDescription(await p.pc.createAnswer());
+  await iceDone(p.pc);
+  if (peers[f] !== p) return;
+  await post('send', auth({ to: f, m: JSON.stringify({ k: 'a', q: x.q, d: p.pc.localDescription }) }));
+}
+
+function onAnswer(f, x) {
+  const p = peers[f];
+  if (p && p.seq === x.q && p.pc.signalingState === 'have-local-offer') p.pc.setRemoteDescription(x.d).catch(() => {});
+}
+
+let sigChain = Promise.resolve();
+function handleMsgs(list) {
+  list.forEach(item => {
+    let x;
+    try { x = JSON.parse(item.m); } catch (e) { return; }
+    sigChain = sigChain.then(() => x.k === 'o' ? onOffer(item.f, x) : onAnswer(item.f, x)).catch(() => {});
+  });
+}
+
+function sync() {
+  const ids = new Set(members.map(m => m.id));
+  Object.keys(peers).forEach(id => { if (!ids.has(id)) closePeer(id); });
+  members.forEach(m => {
+    if (m.id === myId) return;
+    const p = peers[m.id];
+    if (p) { p.n = m.n; p.tile.querySelector('.tag b').textContent = m.n; }
+    if (amOfferer(m.id)) {
+      if (!p || p.s !== m.s) doOffer(m).catch(() => {});
+      else if (p.pc.connectionState !== 'connected' && Date.now() - p.at > 20000) doOffer(m).catch(() => {});
+    } else if (p && p.s !== m.s) closePeer(m.id);
+  });
+}
+
+function renderShare() {
+  const sp = sharer && sharer !== myId ? peers[sharer] : Object.values(peers).find(p => p.rs.scr && p.scr);
+  const show = !!(sp && sp.scr && sp.rs.scr);
+  $('stage').classList.toggle('sharing', show);
+  if (show) {
+    if ($('screenVideo').srcObject !== sp.scr) $('screenVideo').srcObject = sp.scr;
+    $('screenName').textContent = sp.n + ' đang chia sẻ màn hình';
+  } else $('screenVideo').srcObject = null;
+  $('selfShare').hidden = !screenTrack;
+  updateButtons();
+}
+
+function updateButtons() {
+  const s = myState();
+  $('bMic').classList.toggle('off', !!micTrack && !s.mic);
+  $('bMic').querySelector('span').textContent = s.mic ? 'Tắt mic' : 'Bật mic';
+  $('bCam').classList.toggle('off', !!camTrack && !s.cam);
+  $('bCam').querySelector('span').textContent = s.cam ? 'Tắt camera' : 'Bật camera';
+  const other = sharer && sharer !== myId;
+  $('bScreen').classList.toggle('on', !!screenTrack);
+  $('bScreen').disabled = !screenTrack && other && role !== 'host';
+  const who = other ? (peers[sharer] ? peers[sharer].n : 'Người khác') : '';
+  $('bScreen').querySelector('span').textContent = screenTrack ? 'Dừng chia sẻ' : other ? (role === 'host' ? 'Dừng chia sẻ của ' + who : who + ' đang chia sẻ') : 'Chia sẻ màn hình';
+  const hid = $('stage').classList.contains('nocams');
+  $('bTiles').classList.toggle('on', hid);
+  $('bTiles').querySelector('span').textContent = hid ? 'Hiện ô camera' : 'Ẩn ô camera';
+}
+
+$('bMic').onclick = () => { if (!micTrack) return toast('Chưa có micro.'); micTrack.enabled = !micTrack.enabled; broadcast(); };
+$('bCam').onclick = () => { if (!camTrack) return toast('Chưa có camera.'); camTrack.enabled = !camTrack.enabled; broadcast(); };
+$('bTiles').onclick = () => { $('stage').classList.toggle('nocams'); updateButtons(); };
+$('bFull').onclick = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+};
+$('unmute').onclick = () => { Object.values(peers).forEach(p => p.audio.play().catch(() => {})); $('unmute').hidden = true; };
+if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) $('bScreen').hidden = true;
+
+function setScreen(t) {
+  screenTrack = t;
+  Object.values(peers).forEach(p => { const tr = p.pc.getTransceivers()[2]; if (tr) tr.sender.replaceTrack(t).catch(() => {}); });
+  broadcast();
+  renderShare();
+}
+
+async function stopShare(silent) {
+  if (!screenTrack) return;
+  screenTrack.onended = null;
+  screenTrack.stop();
+  setScreen(null);
+  if (sharer === myId) sharer = null;
+  await post('share', auth({ on: false })).catch(() => {});
+  if (silent) toast('Giáo viên đã dừng phần chia sẻ màn hình của bạn.');
+}
+
+$('bScreen').onclick = async () => {
+  if (screenTrack) return stopShare();
+  if (sharer && sharer !== myId) {
+    if (role === 'host') return hostStopShare(sharer);
+    return toast('Đang có người chia sẻ màn hình.');
+  }
+  let s;
+  try { s = await navigator.mediaDevices.getDisplayMedia({ video: true }); } catch (e) { return; }
+  const t = s.getVideoTracks()[0];
+  if ('contentHint' in t) t.contentHint = 'detail';
+  const r = await post('share', auth({ on: true })).catch(() => null);
+  if (!r || !r.ok) { t.stop(); return toast(r && r.by ? r.by + ' đang chia sẻ màn hình.' : 'Chưa chia sẻ được, vui lòng thử lại.'); }
+  sharer = myId;
+  t.onended = () => stopShare();
+  setScreen(t);
+};
+
+function onCmd(c) {
+  if (c === 'mic' && micTrack && micTrack.enabled) { micTrack.enabled = false; broadcast(); toast('Giáo viên đã tắt mic của bạn.'); }
+  if (c === 'cam' && camTrack && camTrack.enabled) { camTrack.enabled = false; broadcast(); toast('Giáo viên đã tắt camera của bạn.'); }
+  if (c === 'share') stopShare(true);
+  if (c === 'kick') finish('kicked');
+}
+
+async function hostStopShare(id) {
+  if (peers[id]) sendTo(peers[id], { cmd: 'share' });
+  sharer = null;
+  updateButtons();
+  await post('unshare', auth()).catch(() => null);
+}
+
+function beep() {
+  try {
+    const a = new (window.AudioContext || window.webkitAudioContext)();
+    [0, .18].forEach(d => {
+      const o = a.createOscillator(), g = a.createGain();
+      o.frequency.value = 880; g.gain.value = .12;
+      o.connect(g); g.connect(a.destination);
+      o.start(a.currentTime + d); o.stop(a.currentTime + d + .12);
+    });
+  } catch (e) {}
+}
+
+function notifyWait(list) {
+  const fresh = list.filter(x => !knownWait.has(x.id));
+  knownWait = new Set(list.map(x => x.id));
+  if (!fresh.length) return;
+  const names = fresh.map(x => x.n).join(', ');
+  beep();
+  toast(names + ' đang xin vào phòng.');
+  if (window.Notification && Notification.permission === 'granted' && document.hidden) {
+    try { new Notification('Có người xin vào phòng họp', { body: names }); } catch (e) {}
+  }
+  clearInterval(titleTimer);
+  let on = false;
+  titleTimer = setInterval(() => {
+    document.title = (on = !on) ? '(' + list.length + ') Có người chờ duyệt' : 'Phòng họp dự án – Gsheet Tô Thuật';
+  }, 1000);
+  setTimeout(() => { clearInterval(titleTimer); document.title = 'Phòng họp dự án – Gsheet Tô Thuật'; }, 15000);
+}
+
+function ago(t) { const m = Math.floor((Date.now() - t) / 60000); return m < 1 ? 'vừa xong' : m + ' phút'; }
+
+let lastPanel = '';
+function renderPanel(waiting) {
+  const guests = members.filter(m => m.id !== 'host');
+  const key = JSON.stringify([waiting, guests.map(m => [m.id, m.n, peers[m.id] ? peers[m.id].rs : 0]), sharer]);
+  $('waitBadge').hidden = !waiting.length;
+  $('waitBadge').textContent = waiting.length;
+  if (key === lastPanel) return;
+  lastPanel = key;
+  $('wCount').textContent = waiting.length;
+  $('mCount').textContent = guests.length + '/' + MAX_GUESTS;
+  const full = guests.length >= MAX_GUESTS;
+  $('waitList').innerHTML = waiting.length ? waiting.map(x => '<div class="pi new"><div class="h"><b>' + esc(x.n) + '</b><span>' + ago(x.t) + '</span></div><div class="a"><button class="btn sm" data-ok="' + x.id + '"' + (full ? ' disabled title="Phòng đã đủ người"' : '') + '>Duyệt</button><button class="btn sm ghost" data-no="' + x.id + '">Từ chối</button></div></div>').join('') : '<div class="empty">Chưa có ai xin vào.</div>';
+  $('memList').innerHTML = guests.length ? guests.map(m => {
+    const rs = peers[m.id] ? peers[m.id].rs : {};
+    return '<div class="pi"><div class="h"><b>' + esc(m.n) + '</b><span>' + (sharer === m.id ? 'Đang chia sẻ' : '') + '</span></div><div class="a">'
+      + '<button class="btn sm ghost" data-mic="' + m.id + '"' + (rs.mic ? '' : ' disabled') + '>Tắt mic</button>'
+      + '<button class="btn sm ghost" data-cam="' + m.id + '"' + (rs.cam ? '' : ' disabled') + '>Tắt cam</button>'
+      + (sharer === m.id ? '<button class="btn sm ghost" data-unshare="' + m.id + '">Dừng chia sẻ</button>' : '')
+      + '<button class="btn sm warn" data-kick="' + m.id + '">Mời ra</button></div></div>';
+  }).join('') : '<div class="empty">Chưa có ai trong phòng.</div>';
+  $('side').querySelectorAll('.pi button').forEach(b => b.onclick = () => hostAct(b));
+}
+
+async function hostAct(b) {
+  const d = b.dataset;
+  b.disabled = true;
+  if (d.ok) {
+    const r = await post('approve', auth({ id: d.ok })).catch(() => null);
+    if (r && r.err === 'full') toast('Phòng đã đủ ' + (MAX_GUESTS + 1) + ' người.');
+  } else if (d.no) await post('deny', auth({ id: d.no })).catch(() => null);
+  else if (d.mic && peers[d.mic]) sendTo(peers[d.mic], { cmd: 'mic' });
+  else if (d.cam && peers[d.cam]) sendTo(peers[d.cam], { cmd: 'cam' });
+  else if (d.unshare) await hostStopShare(d.unshare);
+  else if (d.kick) {
+    if (peers[d.kick]) sendTo(peers[d.kick], { cmd: 'kick' });
+    await post('kick', auth({ id: d.kick })).catch(() => null);
+    closePeer(d.kick);
+  }
+  lastPanel = '';
+}
+
+async function loop() {
+  const myRun = running;
+  while (running && running === myRun) {
+    const r = await post('poll', auth({ s: SESSION })).catch(() => null);
+    if (!running || running !== myRun) return;
+    if (r && r.ok) handlePoll(r);
+    else if (r && r.err === 'host') { store.set('hk', null); location.reload(); return; }
+    await sleep(phase === 'wait' ? 3000 : 2500);
+  }
+}
+
+function handlePoll(r) {
+  if (r.state === 'wait') {
+    phase = 'wait';
+    $('wState').textContent = r.host ? 'Giáo viên đang trong phòng, chờ duyệt...' : 'Giáo viên chưa mở phòng, vui lòng chờ...';
+    return;
+  }
+  if (r.state !== 'in') return finish(r.state);
+  if (!inRoom) enterRoom();
+  phase = 'in';
+  members = r.members || [];
+  sharer = r.sharer;
+  if (r.msgs && r.msgs.length) handleMsgs(r.msgs);
+  sync();
+  if (screenTrack && sharer && sharer !== myId) stopShare(role !== 'host');
+  renderShare();
+  if (role === 'host') { notifyWait(r.waiting || []); renderPanel(r.waiting || []); }
+}
+
+function enterRoom() {
+  inRoom = true;
+  show('vCall');
+  renderSelf();
+}
+
+function teardown() {
+  running = false;
+  inRoom = false;
+  Object.keys(peers).forEach(closePeer);
+  if (screenTrack) { screenTrack.onended = null; screenTrack.stop(); screenTrack = null; }
+  $('grid').innerHTML = '';
+  $('stage').classList.remove('sharing');
+}
+
+function finish(code) {
+  teardown();
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = camTrack = micTrack = null;
+  mediaP = null;
+  if (role !== 'host') { me = null; store.set('pd_me', null); }
+  const t = {
+    denied: ['Chưa được duyệt', 'Giáo viên chưa duyệt yêu cầu tham gia của bạn.'],
+    kicked: ['Bạn đã được mời ra khỏi phòng', 'Liên hệ giáo viên nếu bạn cần tham gia lại.'],
+    ended: ['Cuộc họp đã kết thúc', 'Cảm ơn bạn đã tham gia cùng Gsheet Tô Thuật.'],
+    left: ['Bạn đã rời phòng', 'Bạn có thể xin vào lại bất cứ lúc nào.'],
+    gone: ['Phiên đã hết hạn', 'Trang đã đóng quá lâu. Vui lòng xin vào lại.']
+  }[code] || ['Phiên đã kết thúc', 'Vui lòng xin vào lại.'];
+  $('endTitle').textContent = t[0];
+  $('endText').textContent = t[1];
+  show('vEnd');
+}
+
+$('bEnd').onclick = async () => {
+  if (role === 'host') {
+    if (screenTrack) await stopShare();
+    Object.keys(peers).forEach(closePeer);
+    await post('end', auth()).catch(() => null);
+    toast('Đã kết thúc cuộc họp. Phòng vẫn mở để bạn duyệt người mới.');
+    lastPanel = '';
+    return;
+  }
+  const m = me;
+  finish('left');
+  if (m) await post('leave', { id: m.id, tk: m.tk }).catch(() => null);
+};
+$('wCancel').onclick = async () => { const m = me; finish('left'); if (m) await post('leave', { id: m.id, tk: m.tk }).catch(() => null); };
+$('endAgain').onclick = () => location.reload();
+
+function startPolling() { running = Date.now(); loop(); }
+
+$('joinBtn').onclick = async () => {
+  if (role === 'host') {
+    if (window.Notification && Notification.permission === 'default') Notification.requestPermission().catch(() => {});
+    await ensureMedia();
+    myId = 'host';
+    $('side').hidden = false;
+    $('bPeople').hidden = false;
+    $('bEndText').textContent = 'Kết thúc họp';
+    $('roomLink').value = location.origin + location.pathname;
+    enterRoom();
+    startPolling();
+    return;
+  }
+  const n = $('fName').value.trim();
+  if (me && me.n === n) { myId = me.id; await ensureMedia(); $('wName').textContent = me.n; show('vWait'); phase = 'wait'; return startPolling(); }
+  if (n.length < 2) { $('joinErr').textContent = 'Vui lòng nhập họ và tên.'; return; }
+  $('joinErr').textContent = '';
+  $('joinBtn').disabled = true;
+  $('joinBtn').textContent = 'Đang gửi yêu cầu...';
+  await ensureMedia();
+  const r = await post('join', { n: n }).catch(() => null);
+  $('joinBtn').disabled = false;
+  $('joinBtn').textContent = 'Xin vào phòng';
+  if (!r || !r.ok) { $('joinErr').textContent = r && r.err === 'full' ? 'Phòng chờ đang đông, vui lòng thử lại sau.' : 'Không kết nối được máy chủ, vui lòng thử lại.'; return; }
+  store.set('pd_name', n);
+  me = { id: r.id, tk: r.tk, n: n };
+  myId = me.id;
+  store.set('pd_me', JSON.stringify(me));
+  $('wName').textContent = n;
+  show('vWait');
+  phase = 'wait';
+  startPolling();
+};
+
+$('copyLink').onclick = () => {
+  const l = $('roomLink').value;
+  navigator.clipboard.writeText(l).then(() => toast('Đã sao chép link phòng họp.')).catch(() => { $('roomLink').select(); });
+};
+$('bPeople').onclick = () => { $('side').hidden = !$('side').hidden; };
+
+(async () => {
+  if (hk) {
+    const v = await post('v', { h: hk }).catch(() => ({ ok: false }));
+    if (v.ok) {
+      role = 'host';
+      $('roleChip').hidden = false;
+      $('nameBox').hidden = true;
+      $('joinTitle').textContent = 'Mở phòng họp dự án';
+      $('joinSub').textContent = 'Kiểm tra camera, micro rồi mở phòng. Bạn sẽ nhận thông báo khi có người xin vào.';
+      $('joinBtn').textContent = 'Mở phòng họp';
+    } else { store.set('hk', null); hk = null; }
+  }
+  if (role !== 'host') {
+    $('fName').value = (me && me.n) || store.get('pd_name') || '';
+    if (me) $('joinBtn').textContent = 'Vào lại phòng';
+  }
+  show('vJoin');
+  ensureMedia();
+})();
+</script>
+</body>
+</html>
