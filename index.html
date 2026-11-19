@@ -51,7 +51,15 @@ input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(24,128,56,.15);backg
 .waitbox b{display:block}
 .waitbox span{font-size:13px;color:var(--mute)}
 .call{background:var(--dark);color:#e8eeea}
-.mainc{flex:1;display:flex;flex-direction:column;min-width:0}
+.mainc{flex:1;display:flex;flex-direction:column;min-width:0;position:relative;background:var(--dark)}
+body.incall .top{padding:4px 14px}
+body.incall .brand svg{width:26px;height:26px}
+body.incall .brand b{font-size:14px}
+body.incall .brand span{display:none}
+.sharing .tile.camoff{display:none}
+.sharing.notiles #grid{display:none}
+.mainc:fullscreen .bar{position:absolute;left:0;right:0;bottom:0;z-index:8;background:rgba(26,33,29,.92);opacity:0;transition:opacity .25s}
+.mainc:fullscreen.showbar .bar,.mainc:fullscreen .bar:hover{opacity:1}
 #stage{flex:1;display:flex;gap:10px;padding:10px;min-height:0;position:relative}
 #screenBox{flex:1;position:relative;border-radius:12px;overflow:hidden;background:#000;display:none;min-width:0}
 #screenBox video{width:100%;height:100%;object-fit:contain}
@@ -168,7 +176,7 @@ body.incall footer{display:none}
   </section>
 
   <section class="view call" id="vCall" hidden>
-    <div class="mainc">
+    <div class="mainc" id="mainc">
       <div id="stage">
         <div id="screenBox"><video id="screenVideo" autoplay playsinline muted></video><span class="tag"><b id="screenName"></b></span></div>
         <div id="grid"></div>
@@ -309,6 +317,7 @@ function renderTile(p) {
   p.tile.classList.toggle('camoff', !ok || !p.rs.cam);
   p.tile.classList.toggle('micoff', !p.rs.mic);
   p.tile.querySelector('.conn').hidden = ok;
+  checkTiles();
 }
 
 function closePeer(id) {
@@ -339,6 +348,7 @@ function newPeer(m) {
   p.pc.onconnectionstatechange = () => {
     if (peers[p.id] !== p) return;
     renderTile(p);
+    if (p.pc.connectionState === 'connected' && screenTrack) tuneScreen(p.pc.getTransceivers()[2] && p.pc.getTransceivers()[2].sender);
     if (p.pc.connectionState === 'failed' && amOfferer(p.id)) doOffer(m).catch(() => {});
   };
   peers[m.id] = p;
@@ -424,6 +434,22 @@ function renderShare() {
   updateButtons();
 }
 
+function checkTiles() {
+  const any = [...document.querySelectorAll('#grid .tile')].some(t => !t.classList.contains('camoff'));
+  $('stage').classList.toggle('notiles', !any);
+}
+
+function tuneScreen(snd) {
+  if (!snd || !snd.getParameters) return;
+  try {
+    const p = snd.getParameters();
+    if (!p.encodings || !p.encodings.length) p.encodings = [{}];
+    p.encodings[0].maxBitrate = 2500000;
+    p.degradationPreference = 'maintain-resolution';
+    snd.setParameters(p).catch(() => {});
+  } catch (e) {}
+}
+
 function updateButtons() {
   const s = myState();
   $('bMic').classList.toggle('off', !!micTrack && !s.mic);
@@ -435,6 +461,7 @@ function updateButtons() {
   $('bScreen').disabled = !screenTrack && other && role !== 'host';
   const who = other ? (peers[sharer] ? peers[sharer].n : 'Người khác') : '';
   $('bScreen').querySelector('span').textContent = screenTrack ? 'Dừng chia sẻ' : other ? (role === 'host' ? 'Dừng chia sẻ của ' + who : who + ' đang chia sẻ') : 'Chia sẻ màn hình';
+  checkTiles();
   const hid = $('stage').classList.contains('nocams');
   $('bTiles').classList.toggle('on', hid);
   $('bTiles').querySelector('span').textContent = hid ? 'Hiện ô camera' : 'Ẩn ô camera';
@@ -444,15 +471,31 @@ $('bMic').onclick = () => { if (!micTrack) return toast('Chưa có micro.'); mic
 $('bCam').onclick = () => { if (!camTrack) return toast('Chưa có camera.'); camTrack.enabled = !camTrack.enabled; broadcast(); };
 $('bTiles').onclick = () => { $('stage').classList.toggle('nocams'); updateButtons(); };
 $('bFull').onclick = () => {
-  if (document.fullscreenElement) document.exitFullscreen();
-  else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+  if (document.fullscreenElement) return document.exitFullscreen();
+  const el = $('mainc');
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 };
+document.addEventListener('fullscreenchange', () => {
+  const on = !!document.fullscreenElement;
+  $('bFull').classList.toggle('on', on);
+  $('bFull').querySelector('span').textContent = on ? 'Thoát toàn màn hình' : 'Toàn màn hình';
+  if (on) peekBar();
+});
+let barTimer;
+function peekBar() {
+  $('mainc').classList.add('showbar');
+  clearTimeout(barTimer);
+  barTimer = setTimeout(() => $('mainc').classList.remove('showbar'), 2500);
+}
+$('mainc').addEventListener('mousemove', () => { if (document.fullscreenElement) peekBar(); });
+$('mainc').addEventListener('touchstart', () => { if (document.fullscreenElement) peekBar(); }, { passive: true });
 $('unmute').onclick = () => { Object.values(peers).forEach(p => p.audio.play().catch(() => {})); $('unmute').hidden = true; };
 if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) $('bScreen').hidden = true;
 
 function setScreen(t) {
   screenTrack = t;
-  Object.values(peers).forEach(p => { const tr = p.pc.getTransceivers()[2]; if (tr) tr.sender.replaceTrack(t).catch(() => {}); });
+  Object.values(peers).forEach(p => { const tr = p.pc.getTransceivers()[2]; if (tr) tr.sender.replaceTrack(t).then(() => { if (t) tuneScreen(tr.sender); }).catch(() => {}); });
   broadcast();
   renderShare();
 }
@@ -474,7 +517,7 @@ $('bScreen').onclick = async () => {
     return toast('Đang có người chia sẻ màn hình.');
   }
   let s;
-  try { s = await navigator.mediaDevices.getDisplayMedia({ video: true }); } catch (e) { return; }
+  try { s = await navigator.mediaDevices.getDisplayMedia({ video: { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 15, max: 30 } } }); } catch (e) { return; }
   const t = s.getVideoTracks()[0];
   if ('contentHint' in t) t.contentHint = 'detail';
   const r = await post('share', auth({ on: true })).catch(() => null);
